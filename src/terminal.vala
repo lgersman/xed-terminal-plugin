@@ -157,18 +157,23 @@ namespace TerminalPlugin {
                 this.vte_keyfile_config ();
             }
 
-            try {
-                this.spawn_sync (
-                    Vte.PtyFlags.DEFAULT,
-                    null,
-                    {Vte.get_user_shell ()},
-                    null,
-                    GLib.SpawnFlags.SEARCH_PATH,
-                    null,
-                    out child_pid);
-            } catch (GLib.Error e) {
-                warning (e.message);
-            }
+            this.spawn_async (
+                Vte.PtyFlags.DEFAULT,
+                null,
+                {Vte.get_user_shell ()},
+                null,
+                GLib.SpawnFlags.SEARCH_PATH,
+                null,
+                -1,
+                null,
+                (term, pid, error) => {
+                    if (error != null) {
+                        warning (error.message);
+                    } else {
+                        this.child_pid = pid;
+                    }
+                }
+            );
         }
 
         private GLib.KeyFile get_profile_settings () {
@@ -251,7 +256,8 @@ namespace TerminalPlugin {
 
             var context = this.get_style_context ();
             Gdk.RGBA fg = context.get_color (Gtk.StateFlags.NORMAL);
-            Gdk.RGBA bg = context.get_background_color (Gtk.StateFlags.NORMAL);
+            Value bg_value = context.get_property ("background-color", Gtk.StateFlags.NORMAL);
+            Gdk.RGBA bg = *((Gdk.RGBA*) bg_value.get_boxed ());
             Gdk.RGBA[] palette = new Gdk.RGBA[16];
             bool use_theme_colors = false;
             bool bell = false;
@@ -266,8 +272,8 @@ namespace TerminalPlugin {
                     font = this.profile_settings.get_string ("Configuration", "FontName");
                 }
                 if (this.key_exist ("ColorUseTheme")) {
-                    use_theme_colors = (bool) this.profile_settings.get_string ("Configuration", "ColorUseTheme")
-                                            .down ();
+                    use_theme_colors = this.profile_settings.get_string ("Configuration", "ColorUseTheme")
+                                            .down () == "true";
                 }
                 if (!use_theme_colors) {
                     if (this.key_exist ("ColorForeground")) {
@@ -294,7 +300,7 @@ namespace TerminalPlugin {
                     }
                 }
                 if (this.key_exist ("MiscCursorBlinks")) {
-                    bool blink = (bool) this.profile_settings.get_string ("Configuration", "MiscCursorBlinks").down ();
+                    bool blink = this.profile_settings.get_string ("Configuration", "MiscCursorBlinks").down () == "true";
                     if (blink) {
                         blink_mode = Vte.CursorBlinkMode.ON;
                     } else {
@@ -317,7 +323,7 @@ namespace TerminalPlugin {
                     }
                 }
                 if (this.key_exist ("MiscBell")) {
-                    bell = (bool) this.profile_settings.get_string ("Configuration", "MiscBell").down ();
+                    bell = this.profile_settings.get_string ("Configuration", "MiscBell").down () == "true";
                 }
             } catch (GLib.KeyFileError e) {
                 warning (e.message);
@@ -462,13 +468,13 @@ namespace TerminalPlugin {
                 this.copy_clipboard ();
             });
             copy.set_accel_path (this.accel_base + "copy-clipboard");
-            menu.append (copy);
+            menu.add (copy);
             Gtk.MenuItem paste = new Gtk.MenuItem.with_label (_("Paste"));
             paste.activate.connect (() => {
                 this.paste_clipboard ();
             });
             paste.set_accel_path (this.accel_base + "paste-clipboard");
-            menu.append (paste);
+            menu.add (paste);
 
             this.populate_popup (menu);
 
@@ -476,7 +482,7 @@ namespace TerminalPlugin {
             return menu;
         }
 
-        private void make_popup (Gdk.Event trigger_event) {
+        private void make_popup (Gdk.Event? trigger_event) {
             var menu = this.create_menu ();
             menu.attach_to_widget (this, null);
 
@@ -493,7 +499,7 @@ namespace TerminalPlugin {
         }
 
         private bool copy_clipboard () {
-            this.vte.copy_clipboard ();
+            this.vte.copy_clipboard_format (Vte.Format.TEXT);
             this.vte.grab_focus ();
             return true;
         }
@@ -996,7 +1002,7 @@ namespace TerminalPlugin {
             }
 
             Gtk.ComboBox box = new Gtk.ComboBox.with_model (ls);
-            box.set_focus_on_click (false);
+            ((Gtk.Widget) box).set_focus_on_click (false);
             box.set_id_column (1);
             Gtk.CellRendererText cell = new Gtk.CellRendererText ();
             cell.set_alignment (0, 0);
