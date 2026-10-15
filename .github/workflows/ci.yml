@@ -11,7 +11,7 @@ jobs:
     # xed is only packaged for Linux Mint, so build inside the Mint 22 image
     container: linuxmintd/mint22-amd64
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install build dependencies
         run: |
@@ -30,7 +30,7 @@ jobs:
           ninja -C build
 
       - name: Upload plugin
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: xed-terminal-plugin
           path: |
