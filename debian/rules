@@ -10,10 +10,9 @@ override_dh_missing:
 	dh_missing --fail-missing
 
 override_dh_auto_configure:
-	meson debian/build \
+	meson setup debian/build \
 		--prefix=/usr \
-		--buildtype=plain \
-		-D deprecated_warnings=false
+		--buildtype=plain
 
 override_dh_auto_clean:
 	-dh_auto_clean

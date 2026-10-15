@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # xed is only packaged for Linux Mint, so build inside the Mint 22 image
+    container: linuxmintd/mint22-amd64
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            build-essential meson ninja-build valac gettext pkg-config \
+            libgtk-3-dev libgee-0.8-dev libpeas-dev libvte-2.91-dev xed-dev \
+            libgtksourceview-4-dev libjson-glib-dev libxapp-dev
+
+      - name: Configure
+        run: meson setup build --prefix=/usr
+
+      - name: Build
+        run: |
+          ninja -C build com.github.tudo75.xed-terminal-plugin-gmo
+          ninja -C build
+
+      - name: Upload plugin
+        uses: actions/upload-artifact@v4
+        with:
+          name: xed-terminal-plugin
+          path: |
+            build/src/libterminal.so
+            build/data/terminal.plugin
