@@ -1,3 +1,11 @@
+xed-terminal-plugin (0.1.2) una; urgency=medium
+
+  * Fix compiler warnings and boolean parsing of terminal config values.
+  * Add GitHub Actions for CI and releases.
+  * Fix Debian packaging (build dependencies, meson invocation).
+
+ -- Lars Gersmann <lars.gersmann@ionos.com>  Thu, 15 Oct 2026 14:15:10 +0200
+
 xed-terminal-plugin (0.1.1) una; urgency=medium
 
   * Fixed wrong build of deb package.
