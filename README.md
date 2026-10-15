@@ -24,6 +24,16 @@ To install on Ubuntu based distros:
 
 ## Install
 
+### From a release
+
+Download the `.deb` package from the [Releases](https://github.com/lgersman/xed-terminal-plugin/releases) page and install it:
+
+    sudo apt install ./xed-terminal-plugin_<version>_amd64.deb
+
+The package is built on Linux Mint 22 (Ubuntu 24.04 based) against the system libraries.
+
+### From source
+
 Run <code>./run.sh</code> to install with meson build system.
 
 Or if you want to do it manually:
@@ -44,6 +54,24 @@ Run <code>./uninstall.sh</code> if you installed through meson system or if you 
     sudo ninja -v -C build uninstall
     sudo rm /usr/share/locale/en/LC_MESSAGES/com.github.tudo75.xed-terminal-plugin.mo
     sudo rm /usr/share/locale/it/LC_MESSAGES/com.github.tudo75.xed-terminal-plugin.mo
+
+## Releasing
+
+Releases are built and published by GitHub Actions (`.github/workflows/`):
+
+* `ci.yml` builds the plugin on every push to `main` and on pull requests.
+* `release.yml` builds a `.deb` package and a source tarball when a version tag is pushed and publishes them as a GitHub release.
+
+To create a release:
+
+1. Raise the version in `meson.build` and add an entry to `debian/changelog`.
+2. Commit and push to `main`.
+3. Tag the commit with the version and push the tag:
+
+        git tag 0.1.2
+        git push origin 0.1.2
+
+The tag (with an optional leading `v`) must match the version in `meson.build`, otherwise the release workflow fails.
 
 ## Credits
 
